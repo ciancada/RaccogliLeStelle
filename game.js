@@ -8,6 +8,10 @@ let score = 0;
 let timeLeft = 40;
 let gameOver = false;
 
+let countdown = 3; // Countdown iniziale
+let gameStarted = false; // Controlla se il gioco è iniziato
+let keys = {}; // Per il movimento fluido
+
 // Inizializza le stelle
 function createStars(num) {
   stars = [];
@@ -37,6 +41,24 @@ function isColliding(a, b) {
   );
 }
 
+// Countdown iniziale
+function startCountdown() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+  ctx.fillStyle = "white";
+  ctx.font = "50px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText(countdown, canvas.width / 2, canvas.height / 2);
+
+  if (countdown > 0) {
+    countdown--;
+    setTimeout(startCountdown, 1000);
+  } else {
+    gameStarted = true;
+    createStars(5); // Inizia il gioco
+    gameLoop();
+  }
+}
+
 // Aggiorna il gioco
 function updateGame() {
   if (timeLeft <= 0) {
@@ -59,21 +81,12 @@ function updateGame() {
 
     // Aggiorna il timer
     timeLeft -= 1 / 60;
-  } else {
-    ctx.fillStyle = "red";
-    ctx.font = "40px Arial";
-    ctx.fillText("Game Over!", canvas.width / 2 - 100, canvas.height / 2);
-    ctx.fillText(`Score: ${score}`, canvas.width / 2 - 80, canvas.height / 2 + 50);
-  }
-}
 
-// Gestione del movimento del giocatore
-document.addEventListener("keydown", (e) => {
-  if (!gameOver) {
-    if (e.key === "ArrowLeft" && player.x > 0) player.x -= 10;
-    if (e.key === "ArrowRight" && player.x < canvas.width - player.size) player.x += 10;
-    if (e.key === "ArrowUp" && player.y > 0) player.y -= 10;
-    if (e.key === "ArrowDown" && player.y < canvas.height - player.size) player.y += 10;
+    // Movimento del giocatore
+    if (keys["ArrowLeft"] && player.x > 0) player.x -= 5;
+    if (keys["ArrowRight"] && player.x < canvas.width - player.size) player.x += 5;
+    if (keys["ArrowUp"] && player.y > 0) player.y -= 5;
+    if (keys["ArrowDown"] && player.y < canvas.height - player.size) player.y += 5;
 
     // Controlla collisioni con le stelle
     stars.forEach((star, index) => {
@@ -88,23 +101,40 @@ document.addEventListener("keydown", (e) => {
         });
       }
     });
+  } else {
+    ctx.fillStyle = "red";
+    ctx.font = "40px Arial";
+    ctx.fillText("Game Over!", canvas.width / 2 - 100, canvas.height / 2);
+    ctx.fillText(`Score: ${score}`, canvas.width / 2 - 80, canvas.height / 2 + 50);
   }
+}
+
+// Gestione del movimento del giocatore
+document.addEventListener("keydown", (e) => {
+  keys[e.key] = true;
 
   // Restart con SPACE
   if (e.key === " " && gameOver) {
     score = 0;
     timeLeft = 40;
     gameOver = false;
-    createStars(5);
+    gameStarted = false;
+    countdown = 3;
+    startCountdown();
   }
+});
+
+document.addEventListener("keyup", (e) => {
+  keys[e.key] = false;
 });
 
 // Loop del gioco
 function gameLoop() {
-  updateGame();
-  requestAnimationFrame(gameLoop);
+  if (gameStarted) {
+    updateGame();
+    requestAnimationFrame(gameLoop);
+  }
 }
 
-// Inizializza il gioco
-createStars(5);
-gameLoop();
+// Avvia il countdown iniziale
+startCountdown();
