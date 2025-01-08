@@ -9,8 +9,16 @@
 <body>
   <div class="container">
     <h1>Raccogli le Stelle</h1>
+    <div id="score-container">
+      <p id="score">Score: 0</p>
+      <p id="time">Time: 0</p>
+    </div>
     <canvas id="gameCanvas" width="800" height="600"></canvas>
-    <p>Premi SPACE per iniziare o ricominciare il gioco!</p>
+    <div id="game-over">
+      <h2 id="game-over-text">GAME OVER</h2>
+      <p id="final-score">Score: 0</p>
+      <p id="play-again">Press SPACE to play</p>
+    </div>
   </div>
   <script src="game.js"></script>
 </body>
