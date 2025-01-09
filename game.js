@@ -1,113 +1,85 @@
-// Configurazione del canvas
-const canvas = document.getElementById("gameCanvas");
-const ctx = canvas.getContext("2d");
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
 
-// Dimensioni del canvas
-canvas.width = 800; // Larghezza
-canvas.height = 600; // Altezza
+let squareSize = 30; // Dimensione del quadrato giallo
+let playerSize = squareSize * 2;
+let fieldSize = 400; // Dimensione del campo di gioco
+let score = 0;
+let timeLeft = 40;
+let isPlaying = false;
+let countdown = 3;
 
-// Oggetto giocatore (quadrato verde)
-const player = {
-  x: canvas.width / 2 - 15, // Posizione iniziale
-  y: canvas.height / 2 - 15,
-  size: 30, // Dimensioni
-  color: "green", // Colore
-  speed: 5, // Velocità
+// Posizione e velocità del giocatore
+let player = {
+    x: 0,
+    y: 0,
+    speed: 5
 };
 
-// Array di nemici(quadrati gialli)
-const enemies = [];
-const enemySize = 10;
+// Array per i quadrati gialli
+let squares = [];
 
-// Variabili di stato
-let score = 0;
-let time = 60; // Tempo in secondi
-let gameInterval;
+// Funzione per disegnare un quadrato
+function drawSquare(x, y, size, color) {
+  ctx.fillStyle = color;
+  ctx.fillRect(x, y, size, size);
+}
 
-// Genera nemici casualmente
-function generateEnemies() {
+// Funzione per inizializzare il gioco
+function init() {
+  // ... (codice esistente)
+
+  // Genera i quadrati gialli iniziali
+  generateSquares();
+}
+
+// Funzione per generare i quadrati gialli
+function generateSquares() {
+  squares = [];
   for (let i = 0; i < 20; i++) {
-    enemies.push({
-      x: Math.random() * (canvas.width - enemySize),
-      y: Math.random() * (canvas.height - enemySize),
-      size: enemySize,
-      color: "yellow",
+    squares.push({
+      x: Math.random() * (fieldSize - squareSize),
+      y: Math.random() * (fieldSize - squareSize)
     });
   }
 }
 
-// Disegna un quadrato
-function drawSquare(square) {
-  ctx.fillStyle = square.color;
-  ctx.fillRect(square.x, square.y, square.size, square.size);
-}
+// Funzione per aggiornare il gioco
+function update() {
+  // ... (codice esistente)
 
-// Controlla collisioni tra due quadrati
-function checkCollision(a, b) {
-  return (
-    a.x < b.x + b.size &&
-    a.x + a.size > b.x &&
-    a.y < b.y + b.size &&
-    a.y + a.size > b.y
-  );
-}
+  // Gestisci il movimento del giocatore
+  if (keysPressed.left) player.x -= player.speed;
+  if (keysPressed.right) player.x += player.speed;
+  if (keysPressed.up) player.y -= player.speed;
+  if (keysPressed.down) player.y += player.speed;
 
-// Gestisce il movimento del giocatore
-function movePlayer(direction) {
-  if (direction === "ArrowUp" && player.y > 0) player.y -= player.speed;
-  if (direction === "ArrowDown" && player.y < canvas.height - player.size)
-    player.y += player.speed;
-  if (direction === "ArrowLeft" && player.x > 0) player.x -= player.speed;
-  if (direction === "ArrowRight" && player.x < canvas.width - player.size)
-    player.x += player.speed;
-}
+  // Limita il giocatore all'interno del campo
+  player.x = Math.max(0, Math.min(player.x, fieldSize - playerSize));
+  player.y = Math.max(0, Math.min(player.y, fieldSize - playerSize));
 
-// Aggiorna il gioco
-function updateGame() {
-  // Cancella il canvas
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Disegna il giocatore
-  drawSquare(player);
-
-  // Disegna i nemici
-  enemies.forEach((enemy, index) => {
-    drawSquare(enemy);
-
-    // Controlla collisione con il giocatore
-    if (checkCollision(player, enemy)) {
-      enemies.splice(index, 1); // Rimuove il nemico colpito
-      score += 10; // Incrementa il punteggio
+  // Controlla le collisioni
+  squares = squares.filter(square => {
+    if (
+      player.x < square.x + squareSize &&
+      player.x + playerSize > square.x &&
+      player.y < square.y + squareSize &&
+      player.y + playerSize > square.y
+    ) {
+      score++;
+      return false; // Rimuovi il quadrato colpito dall'array
     }
+    return true;
   });
-
-  // Mostra il punteggio e il tempo
-  ctx.fillStyle = "white";
-  ctx.font = "16px Arial";
-  ctx.fillText(`Score: ${score}`, 10, 20);
-  ctx.fillText(`Time: ${time}`, 10, 40);
 }
 
-// Timer del gioco
-function startTimer() {
-  gameInterval = setInterval(() => {
-    time--;
-    if (time <= 0) {
-      clearInterval(gameInterval);
-      alert(`Tempo scaduto! Punteggio finale: ${score}`);
-    }
-  }, 1000);
-}
+// Oggetto per tenere traccia dei tasti premuti
+let keysPressed = {};
+document.addEventListener('keydown', (event) => {
+  keysPressed[event.key] = true;
+});
+document.addEventListener('keyup', (event) => {
+  delete keysPressed[event.key];
+});
 
-// Avvia il gioco
-function startGame() {
-  generateEnemies();
-  startTimer();
-  setInterval(updateGame, 1000 / 60); // Aggiorna a 60 FPS
-}
-
-// Ascolta i tasti premuti per il movimento
-window.addEventListener("keydown", (e) => movePlayer(e.key));
-
-// Inizia il gioco
-startGame();
+// ... (resto del codice)
