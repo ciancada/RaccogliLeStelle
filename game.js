@@ -1,178 +1,110 @@
+// Configurazione del canvas
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
+canvas.width = 800;
+canvas.height = 600;
 
-let player;
-let stars = [];
+// Colori e dimensioni
+const PLAYER_SIZE = 40; // Dimensione del giocatore
+const STAR_SIZE = 20; // Dimensione delle stelle
+const PLAYER_SPEED = 3; // Velocità del giocatore
+const NUM_STARS = 10; // Numero di stelle
 let score = 0;
-let time = 0;
-let isGameOver = false;
-let countdown = 3;
-let intervalId;
+let timeLeft = 40; // Timer iniziale in secondi
 
-// Classe del giocatore
-class Player {
-  constructor(x, y, size, color) {
-    this.x = x;
-    this.y = y;
-    this.size = size;
-    this.color = color;
-    this.speed = 5;
-  }
+// Elementi HTML
+const scoreElement = document.getElementById("score");
+const timeElement = document.getElementById("time");
 
-  draw() {
-    ctx.fillStyle = this.color;
-    ctx.fillRect(this.x, this.y, this.size, this.size);
-  }
+// Inizializzazione del giocatore
+const player = {
+  x: canvas.width / 2 - PLAYER_SIZE / 2,
+  y: canvas.height / 2 - PLAYER_SIZE / 2,
+  width: PLAYER_SIZE,
+  height: PLAYER_SIZE,
+  color: "green",
+};
 
-  move(dx, dy) {
-    this.x += dx * this.speed;
-    this.y += dy * this.speed;
-
-    // Limiti del canvas
-    this.x = Math.max(0, Math.min(canvas.width - this.size, this.x));
-    this.y = Math.max(0, Math.min(canvas.height - this.size, this.y));
-  }
-}
-
-// Classe delle stelle
-class Star {
-  constructor(x, y, size, color) {
-    this.x = x;
-    this.y = y;
-    this.size = size;
-    this.color = color;
-  }
-
-  draw() {
-    ctx.fillStyle = this.color;
-    ctx.fillRect(this.x, this.y, this.size, this.size);
-  }
-
-  isCollected(player) {
-    return (
-      player.x < this.x + this.size &&
-      player.x + player.size > this.x &&
-      player.y < this.y + this.size &&
-      player.y + player.size > this.y
-    );
-  }
-}
-
-// Funzione per inizializzare il gioco
-function initGame() {
-  player = new Player(400, 300, 30, "green");
-  stars = Array.from({ length: 10 }, () => new Star(
-    Math.random() * (canvas.width - 20),
-    Math.random() * (canvas.height - 20),
-    20,
-    "yellow"
-  ));
-  score = 0;
-  time = 0;
-  countdown = 3;
-  isGameOver = false;
-  clearInterval(intervalId);
-  intervalId = setInterval(updateTime, 1000);
-}
-
-// Funzione per aggiornare il timer
-function updateTime() {
-  if (countdown > 0) {
-    countdown--;
-  } else {
-    time++;
-  }
-}
-
-// Funzione per disegnare il campo di gioco
-function draw() {
-  ctx.clearRect(0, 0, canvas.width, canvas.height);
-
-  // Disegna il countdown iniziale
-  if (countdown > 0) {
-    ctx.fillStyle = "white";
-    ctx.font = "50px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(countdown, canvas.width / 2, canvas.height / 2);
-    return;
-  }
-
-  // Disegna il giocatore e le stelle
-  player.draw();
-  stars.forEach(star => star.draw());
-
-  // Disegna il punteggio e il tempo
-  ctx.fillStyle = "white";
-  ctx.font = "20px Arial";
-  ctx.textAlign = "left";
-  ctx.fillText(`Score: ${score}`, 10, 20);
-  ctx.textAlign = "right";
-  ctx.fillText(`Time: ${time}`, canvas.width - 10, 20);
-}
-
-// Funzione per aggiornare lo stato del gioco
-function update() {
-  if (isGameOver) return;
-
-  // Controlla se il giocatore raccoglie una stella
-  stars.forEach((star, index) => {
-    if (star.isCollected(player)) {
-      score++;
-      stars[index] = new Star(
-        Math.random() * (canvas.width - 20),
-        Math.random() * (canvas.height - 20),
-        20,
-        "yellow"
-      );
-    }
+// Inizializzazione delle stelle
+const stars = [];
+for (let i = 0; i < NUM_STARS; i++) {
+  stars.push({
+    x: Math.random() * (canvas.width - STAR_SIZE),
+    y: Math.random() * (canvas.height - STAR_SIZE),
+    width: STAR_SIZE,
+    height: STAR_SIZE,
+    color: "yellow",
   });
-
-  draw();
 }
 
-// Gestione input per muovere il giocatore
+// Movimento del giocatore
 const keys = {};
 window.addEventListener("keydown", (e) => (keys[e.key] = true));
 window.addEventListener("keyup", (e) => (keys[e.key] = false));
 
-function gameLoop() {
-  if (keys["ArrowUp"]) player.move(0, -1);
-  if (keys["ArrowDown"]) player.move(0, 1);
-  if (keys["ArrowLeft"]) player.move(-1, 0);
-  if (keys["ArrowRight"]) player.move(1, 0);
+// Funzione per disegnare il rettangolo
+function drawRect(rect) {
+  ctx.fillStyle = rect.color;
+  ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+}
 
-  update();
+// Controllo collisione
+function isColliding(rect1, rect2) {
+  return (
+    rect1.x < rect2.x + rect2.width &&
+    rect1.x + rect1.width > rect2.x &&
+    rect1.y < rect2.y + rect2.height &&
+    rect1.y + rect1.height > rect2.y
+  );
+}
 
-  if (isGameOver) {
-    showGameOverScreen();
-    return;
+// Aggiornamento del gioco
+function update() {
+  // Movimento del giocatore
+  if (keys["ArrowUp"] && player.y > 0) player.y -= PLAYER_SPEED;
+  if (keys["ArrowDown"] && player.y + player.height < canvas.height)
+    player.y += PLAYER_SPEED;
+  if (keys["ArrowLeft"] && player.x > 0) player.x -= PLAYER_SPEED;
+  if (keys["ArrowRight"] && player.x + player.width < canvas.width)
+    player.x += PLAYER_SPEED;
+
+  // Controllo collisioni con le stelle
+  stars.forEach((star, index) => {
+    if (isColliding(player, star)) {
+      stars.splice(index, 1); // Rimuovi la stella
+      score += 10; // Incrementa il punteggio
+      scoreElement.textContent = `Score: ${score}`;
+    }
+  });
+}
+
+// Disegno del gioco
+function draw() {
+  ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+  // Disegna il giocatore
+  drawRect(player);
+
+  // Disegna le stelle
+  stars.forEach((star) => drawRect(star));
+}
+
+// Timer del gioco
+const timer = setInterval(() => {
+  timeLeft--;
+  timeElement.textContent = `Time: ${timeLeft}`;
+  if (timeLeft <= 0) {
+    clearInterval(timer);
+    alert(`Game Over! Your score is ${score}`);
+    window.location.reload();
   }
+}, 1000);
 
+// Ciclo di gioco
+function gameLoop() {
+  update();
+  draw();
   requestAnimationFrame(gameLoop);
 }
 
-// Mostra la schermata di fine partita
-function showGameOverScreen() {
-  ctx.fillStyle = "red";
-  ctx.font = "40px Arial";
-  ctx.textAlign = "center";
-  ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 20);
-  ctx.fillStyle = "white";
-  ctx.font = "20px Arial";
-  ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
-  ctx.fillText("Press SPACE to play", canvas.width / 2, canvas.height / 2 + 60);
-}
-
-// Inizia o resetta il gioco
-window.addEventListener("keydown", (e) => {
-  if (e.key === " ") {
-    if (isGameOver || countdown > 0) {
-      initGame();
-      gameLoop();
-    }
-  }
-});
-
-// Inizializza il gioco
-initGame();
 gameLoop();
