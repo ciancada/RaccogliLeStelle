@@ -3,52 +3,16 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Simple Game</title>
-  <style>
-    body {
-      margin: 0;
-      background-color: #333;
-      color: white;
-      font-family: Arial, sans-serif;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      height: 100vh;
-      overflow: hidden;
-    }
-    canvas {
-      border: 2px solid white;
-    }
-    #game-over {
-      display: none;
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      text-align: center;
-      background: rgba(0, 0, 0, 0.8);
-      padding: 20px;
-      border-radius: 8px;
-    }
-    #game-over button {
-      margin-top: 10px;
-      padding: 10px 20px;
-      font-size: 16px;
-      cursor: pointer;
-    }
-  </style>
+  <title>Gioco delle Stelle</title>
+  <link rel="stylesheet" href="styles.css">
 </head>
 <body>
-  <div id="hud">
-    <p id="score">Score: 0</p>
-    <p id="time">Time: 0</p>
-  </div>
-  <canvas id="gameCanvas" width="800" height="600"></canvas>
-  <div id="game-over">
-    <h1>Game Over</h1>
-    <p id="final-score">Score: 0</p>
-    <button onclick="startCountdown()">Restart</button>
+  <div id="game-container">
+    <canvas id="gameCanvas"></canvas>
+    <div id="score-time">
+      <div id="score">Score: 0</div>
+      <div id="time">Time: 40</div>
+    </div>
   </div>
   <script src="game.js"></script>
 </body>
