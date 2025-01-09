@@ -1,36 +1,18 @@
+/* Impostazioni per la pagina */
 body {
+  background-color: #f0f0f0; /* Sfondo grigio chiaro */
   margin: 0;
   display: flex;
   justify-content: center;
   align-items: center;
   height: 100vh;
-  background-color: #333;
-  font-family: Arial, sans-serif;
-  color: white;
+  overflow: hidden;
 }
 
-#game-container {
-  position: relative;
-}
-
+/* Canvas del gioco */
 canvas {
+  background-color: #222; /* Campo di gioco nero */
   display: block;
-  background-color: #222;
-  border: 2px solid white;
-}
-
-#score-time {
-  position: absolute;
-  top: 10px;
-  left: 50%;
-  transform: translateX(-50%);
-  display: flex;
-  gap: 20px;
-}
-
-#score, #time {
-  background-color: #0056b3;
-  padding: 10px 20px;
-  border-radius: 8px;
-  font-size: 18px;
+  border: 2px solid #fff; /* Bordo bianco */
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.5); /* Leggero effetto glow */
 }
