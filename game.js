@@ -15,7 +15,7 @@ const player = {
   speed: 5, // Velocità
 };
 
-// Array di nemici (quadrati gialli)
+// Array di nemici(quadrati gialli)
 const enemies = [];
 const enemySize = 10;
 
