@@ -11,9 +11,9 @@ let countdown = 3;
 
 // Posizione e velocità del giocatore
 let player = {
-    x: 0,
-    y: 0,
-    speed: 5
+  x: 0,
+  y: 0,
+  speed: 5
 };
 
 // Array per i quadrati gialli
@@ -27,10 +27,23 @@ function drawSquare(x, y, size, color) {
 
 // Funzione per inizializzare il gioco
 function init() {
-  // ... (codice esistente)
+  // Posizione iniziale del giocatore
+  player.x = fieldSize / 2 - playerSize / 2;
+  player.y = fieldSize / 2 - playerSize / 2;
 
   // Genera i quadrati gialli iniziali
   generateSquares();
+
+  // Azzera il punteggio e il tempo
+  score = 0;
+  timeLeft = 40;
+
+  // Avvia il countdown iniziale
+  countdown = 3;
+  isPlaying = true;
+
+  // Avvia il ciclo di gioco
+  requestAnimationFrame(update);
 }
 
 // Funzione per generare i quadrati gialli
@@ -46,31 +59,46 @@ function generateSquares() {
 
 // Funzione per aggiornare il gioco
 function update() {
-  // ... (codice esistente)
+  if (isPlaying) {
+    ctx.clearRect(0, 0, fieldSize, fieldSize); // Pulisci il canvas
 
-  // Gestisci il movimento del giocatore
-  if (keysPressed.left) player.x -= player.speed;
-  if (keysPressed.right) player.x += player.speed;
-  if (keysPressed.up) player.y -= player.speed;
-  if (keysPressed.down) player.y += player.speed;
+    // Disegna il giocatore
+    drawSquare(player.x, player.y, playerSize, 'green');
 
-  // Limita il giocatore all'interno del campo
-  player.x = Math.max(0, Math.min(player.x, fieldSize - playerSize));
-  player.y = Math.max(0, Math.min(player.y, fieldSize - playerSize));
+    // Disegna i quadrati gialli
+    squares.forEach(square => {
+      drawSquare(square.x, square.y, squareSize, 'yellow');
+    });
 
-  // Controlla le collisioni
-  squares = squares.filter(square => {
-    if (
-      player.x < square.x + squareSize &&
-      player.x + playerSize > square.x &&
-      player.y < square.y + squareSize &&
-      player.y + playerSize > square.y
-    ) {
-      score++;
-      return false; // Rimuovi il quadrato colpito dall'array
-    }
-    return true;
-  });
+    // Gestisci il movimento del giocatore
+    if (keysPressed.left) player.x -= player.speed;
+    if (keysPressed.right) player.x += player.speed;
+    if (keysPressed.up) player.y -= player.speed;
+    if (keysPressed.down) player.y += player.speed;
+
+    // Limita il giocatore all'interno del campo
+    player.x = Math.max(0, Math.min(player.x, fieldSize - playerSize));
+    player.y = Math.max(0, Math.min(player.y, fieldSize - playerSize));
+
+    // Controlla le collisioni
+    squares = squares.filter(square => {
+      if (
+        player.x < square.x + squareSize &&
+        player.x + playerSize > square.x &&
+        player.y < square.y + squareSize &&
+        player.y + playerSize > square.y
+      ) {
+        score++;
+        return false; // Rimuovi il quadrato colpito dall'array
+      }
+      return true;
+    });
+
+    // Aggiorna il tempo e gestisci la fine del gioco
+    // ... (implementa la logica per il tempo e la fine del gioco)
+
+    requestAnimationFrame(update);
+  }
 }
 
 // Oggetto per tenere traccia dei tasti premuti
@@ -82,4 +110,5 @@ document.addEventListener('keyup', (event) => {
   delete keysPressed[event.key];
 });
 
-// ... (resto del codice)
+// Avvia il gioco inizialmente
+init();
