@@ -1,16 +1,12 @@
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
 
-const scoreElement = document.getElementById("score");
-const timeElement = document.getElementById("time");
-const gameOverScreen = document.getElementById("game-over");
-const finalScore = document.getElementById("final-score");
-
 let player;
-let obstacles = [];
+let stars = [];
 let score = 0;
 let time = 0;
 let isGameOver = false;
+let countdown = 3;
 let intervalId;
 
 // Classe del giocatore
@@ -38,14 +34,13 @@ class Player {
   }
 }
 
-// Classe degli ostacoli
-class Obstacle {
-  constructor(x, y, size, color, speed) {
+// Classe delle stelle
+class Star {
+  constructor(x, y, size, color) {
     this.x = x;
     this.y = y;
     this.size = size;
     this.color = color;
-    this.speed = speed;
   }
 
   draw() {
@@ -53,123 +48,131 @@ class Obstacle {
     ctx.fillRect(this.x, this.y, this.size, this.size);
   }
 
-  update() {
-    this.y += this.speed;
-    if (this.y > canvas.height) {
-      this.y = -this.size;
-      this.x = Math.random() * (canvas.width - this.size);
-    }
-  }
-
-  checkCollision(player) {
+  isCollected(player) {
     return (
-      this.x < player.x + player.size &&
-      this.x + this.size > player.x &&
-      this.y < player.y + player.size &&
-      this.y + this.size > player.y
+      player.x < this.x + this.size &&
+      player.x + player.size > this.x &&
+      player.y < this.y + this.size &&
+      player.y + player.size > this.y
     );
   }
 }
 
-// Inizializzazione del gioco
-function initializeGame() {
-  player = new Player(canvas.width / 2 - 15, canvas.height - 50, 30, "blue");
-  obstacles = [];
-  for (let i = 0; i < 5; i++) {
-    obstacles.push(
-      new Obstacle(
-        Math.random() * (canvas.width - 20),
-        Math.random() * -canvas.height,
-        20,
-        "red",
-        2 + Math.random() * 3
-      )
-    );
-  }
-}
-
-// Start the countdown before the game
-function startCountdown() {
-  let countdown = 3;
-  const countdownInterval = setInterval(() => {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    ctx.fillStyle = "white";
-    ctx.font = "48px Arial";
-    ctx.textAlign = "center";
-    ctx.fillText(countdown > 0 ? countdown : "GO!", canvas.width / 2, canvas.height / 2);
-    countdown--;
-
-    if (countdown < 0) {
-      clearInterval(countdownInterval);
-      startGame();
-    }
-  }, 1000);
-}
-
-// Start the game
-function startGame() {
+// Funzione per inizializzare il gioco
+function initGame() {
+  player = new Player(400, 300, 30, "green");
+  stars = Array.from({ length: 10 }, () => new Star(
+    Math.random() * (canvas.width - 20),
+    Math.random() * (canvas.height - 20),
+    20,
+    "yellow"
+  ));
   score = 0;
   time = 0;
+  countdown = 3;
   isGameOver = false;
-  gameOverScreen.style.display = "none";
-  initializeGame();
+  clearInterval(intervalId);
   intervalId = setInterval(updateTime, 1000);
-  gameLoop();
 }
 
-// Update the time
+// Funzione per aggiornare il timer
 function updateTime() {
-  if (!isGameOver) {
+  if (countdown > 0) {
+    countdown--;
+  } else {
     time++;
-    timeElement.textContent = `Time: ${time}`;
   }
 }
 
-// Game loop
-function gameLoop() {
-  if (isGameOver) return;
-
+// Funzione per disegnare il campo di gioco
+function draw() {
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
-  // Disegna il giocatore e gli ostacoli
-  player.draw();
-  obstacles.forEach((obstacle) => {
-    obstacle.draw();
-    obstacle.update();
+  // Disegna il countdown iniziale
+  if (countdown > 0) {
+    ctx.fillStyle = "white";
+    ctx.font = "50px Arial";
+    ctx.textAlign = "center";
+    ctx.fillText(countdown, canvas.width / 2, canvas.height / 2);
+    return;
+  }
 
-    // Controlla le collisioni
-    if (obstacle.checkCollision(player)) {
-      endGame();
+  // Disegna il giocatore e le stelle
+  player.draw();
+  stars.forEach(star => star.draw());
+
+  // Disegna il punteggio e il tempo
+  ctx.fillStyle = "white";
+  ctx.font = "20px Arial";
+  ctx.textAlign = "left";
+  ctx.fillText(`Score: ${score}`, 10, 20);
+  ctx.textAlign = "right";
+  ctx.fillText(`Time: ${time}`, canvas.width - 10, 20);
+}
+
+// Funzione per aggiornare lo stato del gioco
+function update() {
+  if (isGameOver) return;
+
+  // Controlla se il giocatore raccoglie una stella
+  stars.forEach((star, index) => {
+    if (star.isCollected(player)) {
+      score++;
+      stars[index] = new Star(
+        Math.random() * (canvas.width - 20),
+        Math.random() * (canvas.height - 20),
+        20,
+        "yellow"
+      );
     }
   });
 
-  // Aggiorna il punteggio
-  score++;
-  scoreElement.textContent = `Score: ${score}`;
+  draw();
+}
+
+// Gestione input per muovere il giocatore
+const keys = {};
+window.addEventListener("keydown", (e) => (keys[e.key] = true));
+window.addEventListener("keyup", (e) => (keys[e.key] = false));
+
+function gameLoop() {
+  if (keys["ArrowUp"]) player.move(0, -1);
+  if (keys["ArrowDown"]) player.move(0, 1);
+  if (keys["ArrowLeft"]) player.move(-1, 0);
+  if (keys["ArrowRight"]) player.move(1, 0);
+
+  update();
+
+  if (isGameOver) {
+    showGameOverScreen();
+    return;
+  }
 
   requestAnimationFrame(gameLoop);
 }
 
-// End the game
-function endGame() {
-  isGameOver = true;
-  clearInterval(intervalId);
-  gameOverScreen.style.display = "block";
-  finalScore.textContent = `Score: ${score}`;
+// Mostra la schermata di fine partita
+function showGameOverScreen() {
+  ctx.fillStyle = "red";
+  ctx.font = "40px Arial";
+  ctx.textAlign = "center";
+  ctx.fillText("GAME OVER", canvas.width / 2, canvas.height / 2 - 20);
+  ctx.fillStyle = "white";
+  ctx.font = "20px Arial";
+  ctx.fillText(`Final Score: ${score}`, canvas.width / 2, canvas.height / 2 + 20);
+  ctx.fillText("Press SPACE to play", canvas.width / 2, canvas.height / 2 + 60);
 }
 
-// Gestione input da tastiera
-document.addEventListener("keydown", (event) => {
-  if (event.code === "ArrowUp") player.move(0, -1);
-  if (event.code === "ArrowDown") player.move(0, 1);
-  if (event.code === "ArrowLeft") player.move(-1, 0);
-  if (event.code === "ArrowRight") player.move(1, 0);
-
-  // Inizia o riavvia il gioco con la barra spaziatrice
-  if (event.code === "Space" && isGameOver) {
-    startCountdown();
+// Inizia o resetta il gioco
+window.addEventListener("keydown", (e) => {
+  if (e.key === " ") {
+    if (isGameOver || countdown > 0) {
+      initGame();
+      gameLoop();
+    }
   }
 });
 
-// Inizializza il conto alla rovescia
-startCountdown();
+// Inizializza il gioco
+initGame();
+gameLoop();
