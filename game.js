@@ -1,110 +1,113 @@
 // Configurazione del canvas
 const canvas = document.getElementById("gameCanvas");
 const ctx = canvas.getContext("2d");
-canvas.width = 800;
-canvas.height = 600;
 
-// Colori e dimensioni
-const PLAYER_SIZE = 40; // Dimensione del giocatore
-const STAR_SIZE = 20; // Dimensione delle stelle
-const PLAYER_SPEED = 3; // Velocità del giocatore
-const NUM_STARS = 10; // Numero di stelle
-let score = 0;
-let timeLeft = 40; // Timer iniziale in secondi
+// Dimensioni del canvas
+canvas.width = 800; // Larghezza
+canvas.height = 600; // Altezza
 
-// Elementi HTML
-const scoreElement = document.getElementById("score");
-const timeElement = document.getElementById("time");
-
-// Inizializzazione del giocatore
+// Oggetto giocatore (quadrato verde)
 const player = {
-  x: canvas.width / 2 - PLAYER_SIZE / 2,
-  y: canvas.height / 2 - PLAYER_SIZE / 2,
-  width: PLAYER_SIZE,
-  height: PLAYER_SIZE,
-  color: "green",
+  x: canvas.width / 2 - 15, // Posizione iniziale
+  y: canvas.height / 2 - 15,
+  size: 30, // Dimensioni
+  color: "green", // Colore
+  speed: 5, // Velocità
 };
 
-// Inizializzazione delle stelle
-const stars = [];
-for (let i = 0; i < NUM_STARS; i++) {
-  stars.push({
-    x: Math.random() * (canvas.width - STAR_SIZE),
-    y: Math.random() * (canvas.height - STAR_SIZE),
-    width: STAR_SIZE,
-    height: STAR_SIZE,
-    color: "yellow",
-  });
+// Array di nemici (quadrati gialli)
+const enemies = [];
+const enemySize = 10;
+
+// Variabili di stato
+let score = 0;
+let time = 60; // Tempo in secondi
+let gameInterval;
+
+// Genera nemici casualmente
+function generateEnemies() {
+  for (let i = 0; i < 20; i++) {
+    enemies.push({
+      x: Math.random() * (canvas.width - enemySize),
+      y: Math.random() * (canvas.height - enemySize),
+      size: enemySize,
+      color: "yellow",
+    });
+  }
 }
 
-// Movimento del giocatore
-const keys = {};
-window.addEventListener("keydown", (e) => (keys[e.key] = true));
-window.addEventListener("keyup", (e) => (keys[e.key] = false));
-
-// Funzione per disegnare il rettangolo
-function drawRect(rect) {
-  ctx.fillStyle = rect.color;
-  ctx.fillRect(rect.x, rect.y, rect.width, rect.height);
+// Disegna un quadrato
+function drawSquare(square) {
+  ctx.fillStyle = square.color;
+  ctx.fillRect(square.x, square.y, square.size, square.size);
 }
 
-// Controllo collisione
-function isColliding(rect1, rect2) {
+// Controlla collisioni tra due quadrati
+function checkCollision(a, b) {
   return (
-    rect1.x < rect2.x + rect2.width &&
-    rect1.x + rect1.width > rect2.x &&
-    rect1.y < rect2.y + rect2.height &&
-    rect1.y + rect1.height > rect2.y
+    a.x < b.x + b.size &&
+    a.x + a.size > b.x &&
+    a.y < b.y + b.size &&
+    a.y + a.size > b.y
   );
 }
 
-// Aggiornamento del gioco
-function update() {
-  // Movimento del giocatore
-  if (keys["ArrowUp"] && player.y > 0) player.y -= PLAYER_SPEED;
-  if (keys["ArrowDown"] && player.y + player.height < canvas.height)
-    player.y += PLAYER_SPEED;
-  if (keys["ArrowLeft"] && player.x > 0) player.x -= PLAYER_SPEED;
-  if (keys["ArrowRight"] && player.x + player.width < canvas.width)
-    player.x += PLAYER_SPEED;
-
-  // Controllo collisioni con le stelle
-  stars.forEach((star, index) => {
-    if (isColliding(player, star)) {
-      stars.splice(index, 1); // Rimuovi la stella
-      score += 10; // Incrementa il punteggio
-      scoreElement.textContent = `Score: ${score}`;
-    }
-  });
+// Gestisce il movimento del giocatore
+function movePlayer(direction) {
+  if (direction === "ArrowUp" && player.y > 0) player.y -= player.speed;
+  if (direction === "ArrowDown" && player.y < canvas.height - player.size)
+    player.y += player.speed;
+  if (direction === "ArrowLeft" && player.x > 0) player.x -= player.speed;
+  if (direction === "ArrowRight" && player.x < canvas.width - player.size)
+    player.x += player.speed;
 }
 
-// Disegno del gioco
-function draw() {
+// Aggiorna il gioco
+function updateGame() {
+  // Cancella il canvas
   ctx.clearRect(0, 0, canvas.width, canvas.height);
 
   // Disegna il giocatore
-  drawRect(player);
+  drawSquare(player);
 
-  // Disegna le stelle
-  stars.forEach((star) => drawRect(star));
+  // Disegna i nemici
+  enemies.forEach((enemy, index) => {
+    drawSquare(enemy);
+
+    // Controlla collisione con il giocatore
+    if (checkCollision(player, enemy)) {
+      enemies.splice(index, 1); // Rimuove il nemico colpito
+      score += 10; // Incrementa il punteggio
+    }
+  });
+
+  // Mostra il punteggio e il tempo
+  ctx.fillStyle = "white";
+  ctx.font = "16px Arial";
+  ctx.fillText(`Score: ${score}`, 10, 20);
+  ctx.fillText(`Time: ${time}`, 10, 40);
 }
 
 // Timer del gioco
-const timer = setInterval(() => {
-  timeLeft--;
-  timeElement.textContent = `Time: ${timeLeft}`;
-  if (timeLeft <= 0) {
-    clearInterval(timer);
-    alert(`Game Over! Your score is ${score}`);
-    window.location.reload();
-  }
-}, 1000);
-
-// Ciclo di gioco
-function gameLoop() {
-  update();
-  draw();
-  requestAnimationFrame(gameLoop);
+function startTimer() {
+  gameInterval = setInterval(() => {
+    time--;
+    if (time <= 0) {
+      clearInterval(gameInterval);
+      alert(`Tempo scaduto! Punteggio finale: ${score}`);
+    }
+  }, 1000);
 }
 
-gameLoop();
+// Avvia il gioco
+function startGame() {
+  generateEnemies();
+  startTimer();
+  setInterval(updateGame, 1000 / 60); // Aggiorna a 60 FPS
+}
+
+// Ascolta i tasti premuti per il movimento
+window.addEventListener("keydown", (e) => movePlayer(e.key));
+
+// Inizia il gioco
+startGame();
