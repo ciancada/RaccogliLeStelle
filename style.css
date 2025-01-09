@@ -1,20 +1,36 @@
 body {
   margin: 0;
-  background-color: black;
-  color: white;
-  font-family: Arial, sans-serif;
   display: flex;
-  flex-direction: column;
+  justify-content: center;
   align-items: center;
+  height: 100vh;
+  background-color: #333;
+  font-family: Arial, sans-serif;
+  color: white;
+}
+
+#game-container {
+  position: relative;
 }
 
 canvas {
-  margin: 20px 0;
-  background-color: #333;
   display: block;
+  background-color: #222;
+  border: 2px solid white;
 }
 
-#game-over {
-  display: none;
-  text-align: center;
+#score-time {
+  position: absolute;
+  top: 10px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: flex;
+  gap: 20px;
+}
+
+#score, #time {
+  background-color: #0056b3;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-size: 18px;
 }
